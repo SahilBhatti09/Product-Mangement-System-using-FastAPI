@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Update Product</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Update Product</h2>
+
+<input id="pid" placeholder="Product UUID" required>
+
+<h3>Product Fields (Optional)</h3>
+
+<input id="name" placeholder="Name">
+<input id="brand" placeholder="Brand">
+<textarea id="description" placeholder="Description"></textarea>
+
+<input id="price" type="number" step="0.01" placeholder="Price">
+<input id="discount" type="number" step="0.01" placeholder="Discount %">
+<input id="rating" type="number" step="0.1" placeholder="Rating">
+
+<select id="category">
+  <option value="">-- Category --</option>
+  <option value="electronics">Electronics</option>
+  <option value="clothing">Clothing</option>
+  <option value="grocery">Grocery</option>
+  <option value="furniture">Furniture</option>
+</select>
+
+<input id="tags" placeholder="Tags (comma separated)">
+<input id="image_url" placeholder="Image URL">
+<input id="stock" type="number" placeholder="Stock">
+
+<label>
+  <input type="checkbox" id="is_active">
+  Active
+</label>
+
+<h3>Seller (Optional)</h3>
+<input id="seller_name" placeholder="Seller Name">
+<input id="seller_email" placeholder="Seller Email">
+<input id="seller_website" placeholder="Seller Website">
+
+<h3>Dimensions (Optional)</h3>
+<input id="length" type="number" step="0.01" placeholder="Length">
+<input id="width" type="number" step="0.01" placeholder="Width">
+<input id="height" type="number" step="0.01" placeholder="Height">
+<button id="updateBtn" type="button" style="background-color: #404349; color: white;">Update Product</button>
+
+<p id="msg"></p>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/products";
+
+function safeValue(el) {
+  return el && el.value ? el.value.trim() : undefined;
+}
+
+function safeNumber(el) {
+  return el && el.value !== "" ? Number(el.value) : undefined;
+}
+
+async function updateProduct() {
+  const msg = document.getElementById("msg");
+
+  const payload = {};
+
+  /* ---------- BASIC ---------- */
+  const pid = document.getElementById("pid");
+  const name = document.getElementById("name");
+  const brand = document.getElementById("brand");
+  const description = document.getElementById("description");
+  const price = document.getElementById("price");
+  const discount = document.getElementById("discount");
+  const rating = document.getElementById("rating");
+  const category = document.getElementById("category");
+  const tags = document.getElementById("tags");
+  const image_url = document.getElementById("image_url");
+  const stock = document.getElementById("stock");
+  const is_active = document.getElementById("is_active");
+  const seller_name = document.getElementById("seller_name");
+  const seller_email = document.getElementById("seller_email");
+  const seller_website = document.getElementById("seller_website");
+  const length = document.getElementById("length");
+  const width = document.getElementById("width");
+  const height = document.getElementById("height");
+  fetch('http://127.0.0.1:7242/ingest/c24c1020-06d6-4897-beb7-5fbdfe6a68a5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'update.html:79',message:'Element references captured',data:{stock_exists:!!stock,stock_value:stock?.value,seller_name_exists:!!seller_name,length_exists:!!length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+
+  if (name.value.trim()) payload.name = name.value.trim();
+  if (brand.value.trim()) payload.brand = brand.value.trim();
+  if (description.value.trim()) payload.description = description.value.trim();
+  if (price.value) payload.price = Number(price.value);
+  if (discount.value) payload.discount_percent = Number(discount.value);
+  if (rating.value) payload.rating = Number(rating.value);
+  if (category.value) payload.category = category.value;
+  if (stock.value) payload.stock_quantity = Number(stock.value);
+  if (tags.value) {
+    payload.tags = tags.value
+      .split(",")
+      .map(t => t.trim())
+      .filter(Boolean);
+  }
+
+  if (image_url.value) payload.image_urls = [image_url.value];
+
+  if (is_active.checked) payload.is_active = true;
+
+  /* ---------- SELLER ---------- */
+  fetch('http://127.0.0.1:7242/ingest/c24c1020-06d6-4897-beb7-5fbdfe6a68a5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'update.html:128',message:'Seller construction',data:{has_name:!!seller_name.value,has_email:!!seller_email.value,has_website:!!seller_website.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
+  if (seller_name.value || seller_email.value || seller_website.value) {
+    payload.seller = {};
+    if (seller_name.value) payload.seller.seller_name = seller_name.value;
+    if (seller_email.value) payload.seller.seller_email = seller_email.value;
+    if (seller_website.value) payload.seller.seller_website = seller_website.value;
+  }
+
+  /* ---------- DIMENSIONS ---------- */
+  if (length.value || width.value || height.value) {
+    payload.dimensions_cm = {};
+    if (length.value) payload.dimensions_cm.length = Number(length.value);
+    if (width.value) payload.dimensions_cm.width = Number(width.value);
+    if (height.value) payload.dimensions_cm.height = Number(height.value);
+  }
+
+  if (Object.keys(payload).length === 0) {
+    msg.textContent = "❌ Nothing to update";
+    return;
+  }
+
+  const res = await fetch(`${API_URL}/${pid.value}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw data;
+
+  msg.textContent = "✅ Product updated successfully";
+  console.log("UPDATED:", data);
+}
+
+document.getElementById("updateBtn").addEventListener("click", () => {
+  alert("Product Updated Successfully");
+  updateProduct();
+});
+
+</script>
+
+</body>
+</html>

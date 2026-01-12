@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product Store</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Product Store</h1>
+
+<!-- FILTER ROW -->
+<div class="filter-row">
+  <input id="category" placeholder="Category">
+  <input id="minPrice" placeholder="Minimum Price" type="number">
+  <input id="maxPrice" placeholder="Maximum Price" type="number">
+  <button onclick="loadProducts()" style="background-color: #404349; color: white;">Apply</button>
+</div>
+
+<div id="products" class="product-grid"></div>
+<p id="msg"></p>
+
+<script src="api.js"></script>
+<script>
+const LIMIT = 50;
+let OFFSET = 1;
+
+async function loadProducts() {
+  const url =
+    `${API_URL}?` +
+    `category=${category.value}` +
+    `&min_price=${minPrice.value || 0}` +
+    `&max_price=${maxPrice.value || 100000}` +
+    `&limit=${LIMIT}` +
+    `&offset=${OFFSET}`;
+
+  try {
+    const res = await apiRequest(url, "GET");
+    render(res.items);
+  } catch (e) {
+    msg.textContent = JSON.stringify(e, null, 2);
+  }
+}
+
+function render(products) {
+  const grid = document.getElementById("products");
+  grid.innerHTML = "";
+
+  products.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    card.innerHTML = `
+      <h3>${p.name}</h3>
+      <p><b>Brand:</b> ${p.brand}</p>
+      <p><b>Price:</b> ${p.price} ${p.currency}</p>
+      <p><b>Discount:</b> ${p.discount_percent}%</p>
+      <p><b>Stock:</b> ${p.stock}</p>
+
+      <button onclick="openUpdate('${p.id}')">Update</button>
+      <button onclick="deleteProduct('${p.id}')">Delete</button>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+async function openUpdate(id) {
+  try {
+    const product = await apiRequest(`${API_URL}/${id}`, "GET");
+
+    const price = prompt("New price", product.price);
+    const stock = prompt("New stock", product.stock);
+    const discount = prompt("New discount", product.discount_percent);
+
+    const payload = JSON.parse(JSON.stringify(product));
+
+    payload.price = price === "" ? payload.price : Number(price);
+    payload.stock = stock === "" ? payload.stock : Number(stock);
+    payload.discount_percent =
+      discount === "" ? payload.discount_percent : Number(discount);
+
+    // 🔥 SELLER NORMALIZATION — MATCH PYDANTIC EXACTLY
+    payload.seller = {
+      seller_id: payload.seller.seller_id,
+      seller_name: payload.seller.seller_name ?? payload.seller.name,
+      seller_email: payload.seller.seller_email ?? payload.seller.email,
+      seller_website: payload.seller.seller_website ?? payload.seller.website
+    };
+
+    console.log("FINAL PUT PAYLOAD", payload);
+
+    await apiRequest(`${API_URL}/${id}`, "PUT", payload);
+
+    alert("✅ Updated successfully");
+    loadProducts();
+
+  } catch (e) {
+    alert(JSON.stringify(e, null, 2));
+  }
+}
+
+async function deleteProduct(id) {
+  if (!confirm("Delete this product?")) return;
+
+  await apiRequest(`${API_URL}/${id}`, "DELETE");
+  loadProducts();
+}
+
+loadProducts();
+</script>

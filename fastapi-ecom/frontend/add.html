@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Product</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h2>Add Product</h2>
+
+<form id="addForm">
+
+  <input id="name" placeholder="Product Name" required>
+  <input id="brand" placeholder="Brand" required>
+
+  <textarea id="description" placeholder="Product Description" required></textarea>
+
+  <input id="price" type="number" placeholder="Price" required>
+  <input id="discount" type="number" placeholder="Discount %" required>
+  <input id="rating" type="number" placeholder="Rating (1-5)" required>
+
+  <select id="category" required>
+    <option value="">Select Category</option>
+    <option value="electronics">Electronics</option>
+    <option value="clothing">Clothing</option>
+    <option value="grocery">Grocery</option>
+    <option value="furniture">Furniture</option>
+    <option value="other">Other</option>
+  </select>
+
+  <input id="tags" placeholder="Tags (comma separated)">
+  <input id="image_url" placeholder="Image URL" required>
+
+  <input id="stock_quantity" type="number" placeholder="Stock Quantity" required>
+
+  <label>
+    <input type="checkbox" id="is_active" checked> Is Active
+  </label>
+
+  <h4>Seller Info</h4>
+  <input id="seller_name" placeholder="Seller Name" required>
+  <input id="seller_email" placeholder="Seller Email" required>
+  <input id="seller_website" placeholder="Seller Website" required>
+
+  <h4>Dimensions (cm)</h4>
+  <input id="length" type="number" placeholder="Length" required>
+  <input id="width" type="number" placeholder="Width" required>
+  <input id="height" type="number" placeholder="Height" required>
+
+  <button type="submit" style="background-color: #404349; color: white;">Add Product</button>
+</form>
+
+<p id="msg"></p>
+
+<script>
+  const API_URL = "http://127.0.0.1:8000/products";
+  
+  document.getElementById("addForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+  
+    // 🔒 Explicit DOM access (NO implicit globals)
+    const nameEl = document.getElementById("name");
+    const brandEl = document.getElementById("brand");
+    const descriptionEl = document.getElementById("description");
+    const categoryEl = document.getElementById("category");
+    const priceEl = document.getElementById("price");
+    const discountEl = document.getElementById("discount");
+    const ratingEl = document.getElementById("rating");
+    const stockEl = document.getElementById("stock_quantity");
+    const tagsEl = document.getElementById("tags");
+    const imageEl = document.getElementById("image_url");
+  
+    const sellerNameEl = document.getElementById("seller_name");
+    const sellerEmailEl = document.getElementById("seller_email");
+    const sellerWebsiteEl = document.getElementById("seller_website");
+  
+    const lengthEl = document.getElementById("length");
+    const widthEl = document.getElementById("width");
+    const heightEl = document.getElementById("height");
+  
+    // ✅ SKU format backend expects
+    const sku = `${brandEl.value.toUpperCase()}-MODEL-${String(
+      Math.floor(Math.random() * 1000)
+    ).padStart(3, "0")}`;
+  
+    const payload = {
+      id: crypto.randomUUID(),
+      sku,
+      name: nameEl.value.trim(),
+      brand: brandEl.value.trim(),
+      description: descriptionEl.value.trim(),
+      category: categoryEl.value,
+  
+      price: Number(priceEl.value),
+      discount_percent: Number(discountEl.value),
+      rating: Number(ratingEl.value),
+      stock: Number(stockEl.value),
+      is_active: true,
+  
+      tags: tagsEl.value.split(",").map(t => t.trim()).filter(Boolean),
+      image_urls: [imageEl.value],
+  
+      created_at: new Date().toISOString(),
+  
+      dimensions_cm: {
+        length: Number(lengthEl.value),
+        width: Number(widthEl.value),
+        height: Number(heightEl.value)
+      },
+  
+      seller: {
+        seller_id: crypto.randomUUID(),
+        seller_name: sellerNameEl.value.trim(),
+        seller_email: sellerEmailEl.value.trim(),
+        seller_website: sellerWebsiteEl.value.trim()
+      }
+    };
+  
+    console.log("FINAL PAYLOAD:", payload);
+  
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+  
+      const data = await res.json();
+      if (!res.ok) throw data;
+  
+      alert("✅ Product added successfully");
+      e.target.reset();
+  
+    } catch (err) {
+      console.error(err);
+      alert("❌ " + JSON.stringify(err, null, 2));
+    }
+  });
+  </script>  
+
+</body>
+</html>

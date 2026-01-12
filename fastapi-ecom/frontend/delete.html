@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Delete Product</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Delete Product</h2>
+
+<input id="pid" placeholder="Product UUID">
+<p id="msg"></p>
+
+<button onclick="remove()" style="background-color: #404349; color: white;">Delete Product</button>
+<script src="api.js"></script>
+<script>
+    
+async function remove() {
+  try {
+    await apiRequest(`${API_URL}/${pid.value}`, "DELETE");
+    msg.textContent = "✅ Product deleted";
+  } catch (e) {
+    msg.textContent = "❌ " + JSON.stringify(e);
+  }
+}
+</script>
+
+</body>
+</html>
